@@ -11,7 +11,7 @@ typedef struct _page {
     int referenceCount;        // the number of times the page has been referenced
     int pid;                   // ID of the process the page belongs to
     struct _page * nextPtr;    // pointer to next page in the list
-    int physPageID;             // ID of physical page in memory. corresponds to memID
+    int physPageID;            // ID of physical page in memory. corresponds to memID
 } page;
 
 typedef struct _memory {
@@ -213,7 +213,7 @@ memory * firstFreePage(memory * memPtr) {
 // returns 0 if page was already in memory, 1 otherwise
 int pageIn(page * pagePtr, memory * memPtr, int time) {
      if (pagePtr->inMemory) {
-          printf("Error Time %d Process %3d, virtual page %2d, physical page %2d already in memory\n", time, pagePtr->pid, pagePtr->pageID, memPtr->memID); 
+          printf("Error Time %d.%d) Process %3d, virtual page %2d, physical page %2d already in memory\n", (time*100)/1000, (time*100)%1000, pagePtr->pid, pagePtr->pageID, memPtr->memID); 
           return 0;
      }
 
@@ -224,7 +224,7 @@ int pageIn(page * pagePtr, memory * memPtr, int time) {
           pagePtr->inMemory = 1;
           pagePtr->timePagedIn = time;
           pagePtr->physPageID = memPtr->memID; //set the physical page ID
-          printf("Time %d Process %3d, paged in virtual page %2d, in memory physical page %2d\n", time, pagePtr->pid, pagePtr->pageID, memPtr->memID); 
+          printf("Time %d.%d Process %3d, paged in virtual page %2d, in memory physical page %2d\n", (time*100)/1000, (time*100)%1000, pagePtr->pid, pagePtr->pageID, memPtr->memID); 
      }
      return 1;
 }
@@ -241,7 +241,7 @@ int pageOut(page * pagePtr, memory * memPtr, int time) {
                memPtr->pagePtr->timeLastReferenced = 0;
                memPtr->pagePtr->referenceCount = 0; //TODO: does M/LFU only count uses since pageIn or overall?
                memPtr->pagePtr->physPageID = -1; //reset the physical page ID
-               printf("Time %d Process %3d, paged out virtual page %2d, evicting physical page %2d\n", time, pagePtr->pid, pagePtr->pageID, memPtr->memID); 
+               printf("Time %d.%d Process %3d, paged out virtual page %2d, evicting physical page %2d\n", (time*100)/1000, (time*100)%1000, pagePtr->pid, pagePtr->pageID, memPtr->memID); 
                return 1;
           }
           memPtr = memPtr->nextPtr;
@@ -299,7 +299,7 @@ page * generateReference(process * procPtr, int time) {
      for (i = 0; i < newReferencePageID; ++i)
           pageToReference = pageToReference->nextPtr;
 
-     printf("Time %d Process %3d last %2d wants %2d\t", time,
+     printf("Time %d.%d Process %3d last %2d wants %2d\t", (time*100)/1000, (time*100)%1000,
           pageToReference->pid, previouslyReferencedPage(procPtr)->pageID, pageToReference->pageID);
 
      return pageToReference;
@@ -408,11 +408,11 @@ int processCompleted(process * procPtr, int time) {
 // initiates process by referencing their page 0 
 void startProcess(process * procPtr, memory * memPtr, int time) {
      procPtr->firstRunTime = time;
-     printf("Process %3d starting at time %3d, arrived at %f with end time %3d\n", 
-          procPtr->pid, procPtr->firstRunTime, procPtr->arrivalTime, (procPtr->firstRunTime + procPtr->serviceTime));
+     printf("Process %3d starting at time %3d.%d, arrived at %f with end time %3d.%d\n", 
+          procPtr->pid, (procPtr->firstRunTime)*100/1000, ((procPtr->firstRunTime)*100)%1000, (procPtr->arrivalTime)/10, (procPtr->firstRunTime + procPtr->serviceTime)*100/1000, ((procPtr->firstRunTime + procPtr->serviceTime)*100)%1000);
      pageIn(procPtr->pagePtr, memPtr, time);
      referencePage(procPtr, procPtr->pagePtr, memPtr, time);
-     printf("Time %d Process %3d MISS on first reference\n", time, procPtr->pid);
+     printf("Time %d.%d Process %3d MISS on first reference\n", (time*100)/1000, (time*100)%1000, procPtr->pid);
 
 }
 
@@ -430,7 +430,7 @@ int stopProcess(process * procPtr, memory * memPtr, int time) { //TODO: time par
      }
 
      if(count)
-          printf("Process %d stopped at time %d, removed %d pages from memory\n", procPtr->pid, time, count);
+          printf("Process %d stopped at time %d.%d, removed %d pages from memory\n", procPtr->pid, (time*100)/1000, (time*100)%1000, count);
 
      return count;
 }
@@ -439,7 +439,7 @@ int stopProcess(process * procPtr, memory * memPtr, int time) { //TODO: time par
 void bringInWaitingJobs(process * procPtr, memory * memPtr, int time) {
      while (procPtr) {
           if ((procPtr->arrivalTime < (float)time) && (procPtr->firstRunTime == -1) && (numberOfFreePages(memPtr) >= 4)) {
-               printf("Process %d Arrival Time %f Service Time %d Number of pages: %d\n", procPtr->pid, procPtr->arrivalTime, procPtr->serviceTime, procPtr->numberOfPages);
+               printf("Process %d Arrival Time %f Service Time %d Number of pages: %d\n", procPtr->pid, (procPtr->arrivalTime)/10, (procPtr->serviceTime)/10, procPtr->numberOfPages);
                startProcess(procPtr, memPtr, time);
           }
           procPtr = procPtr->nextPtr;
@@ -513,7 +513,7 @@ int main() {
                     }
                     else {
                          printf("HIT\n");
-                         printf("Time %d Process %d Virtual Page %d Physical Page %d\n", time, procPtr->pid, desiredPage->pageID, desiredPage->physPageID);
+                         printf("Time %d.%d Process %d Virtual Page %d Physical Page %d\n", (time*100)/1000, (time*100)%1000, procPtr->pid, desiredPage->pageID, desiredPage->physPageID);
                     }
                     //actually reference the page
                     referencePage(procPtr, desiredPage, memHead, time);
