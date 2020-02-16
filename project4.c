@@ -239,7 +239,7 @@ int pageOut(page * pagePtr, memory * memPtr, int time) {
                memPtr->busy = 0;
                memPtr->pagePtr->inMemory = 0;
                memPtr->pagePtr->timeLastReferenced = 0;
-               memPtr->pagePtr->referenceCount = 0; //TODO: does M/LFU only count uses since pageIn or overall?
+               memPtr->pagePtr->referenceCount = 0;
                memPtr->pagePtr->physPageID = -1; //reset the physical page ID
                printf("Time %d.%d Process %3d, paged out virtual page %2d, evicting physical page %2d\n", (time*100)/1000, (time*100)%1000, pagePtr->pid, pagePtr->pageID, memPtr->memID); 
                return 1;
@@ -250,7 +250,7 @@ int pageOut(page * pagePtr, memory * memPtr, int time) {
 }
 
 // updates metadata for referencing a page
-void referencePage(process * procPtr, page * pagePtr, memory * memPtr, int time) { //TODO: memptr is only there for print
+void referencePage(process * procPtr, page * pagePtr, memory * memPtr, int time) { 
      pagePtr->timeLastReferenced = time;
      pagePtr->referenceCount += 1;
      procPtr->pageLastReferenced = pagePtr;
@@ -366,10 +366,30 @@ page * pageReplaceFIFO(process * procPtr, memory * memPtr, int time, policy desi
 }
 
 page * pageReplaceRANDOM(process * procPtr, memory * memPtr, int time, policy desiredPolicy) {
-     return NULL; // TODO: actually implement
+     page * RANDOM = procPtr->pagePtr;
+     int count = 0;
+
+     while (RANDOM) {
+          if (RANDOM->inMemory)
+               ++count;
+          RANDOM = RANDOM->nextPtr;
+     }
+
+     RANDOM = procPtr->pagePtr;
+     int randomCount = (rand() % count) + 1;
+
+     while (RANDOM) {
+          if (RANDOM->inMemory == 1) {
+               randomCount -= 1;
+               if (randomCount == 0)
+                    break;
+          }
+          RANDOM = RANDOM->nextPtr;
+     }
+
+     return RANDOM;
 }
 
-// TODO: test various algs
 page * pageReplace(process * procPtr, memory * memPtr, int time, policy desiredPolicy) {
      page * pageToReplace = NULL;
      switch (desiredPolicy) {
@@ -417,7 +437,7 @@ void startProcess(process * procPtr, memory * memPtr, int time) {
 }
 
 // stops process and removes its pages from memory, returns the number of pages removed
-int stopProcess(process * procPtr, memory * memPtr, int time) { //TODO: time param is only for the print
+int stopProcess(process * procPtr, memory * memPtr, int time) { 
      int count = 0;
 
      while(memPtr) {
@@ -485,7 +505,7 @@ int main() {
      process * procHead = generateProcesses();
 
      int time;
-     policy desiredPolicy = FIFO;
+     policy desiredPolicy = RANDOM;
 
      for (time = 0; time < 600; ++time) {
           process * procPtr = procHead;
