@@ -3,6 +3,9 @@
 #include <time.h>
 #define NUM_JOBS 500
 
+int DEBUG_print_references;        // enables or disables refrence notifications
+int DEBUG_trial_statistics[25][3]; // [Trial num][jobs, hits, misses]
+
 typedef struct _page {
     int pageID;                // ID of the page, numbered 0 to (numberOfPages - 1) for each process
     int inMemory;              // 0 if page is not in memory
@@ -26,6 +29,8 @@ typedef struct _process {
     float arrivalTime;         // time the process arrived at the queue is between 0.1s and 59.9s
     int serviceTime;           // time required to service the process
     int firstRunTime;          // time when the process starts
+    int hitCount;              // number of page hits on this process' references
+    int missCount;             // number of page misses on this process' references
     int numberOfPages;         // size of the process represented in pages randomly chosen as either 5, 11, 17, or 31
     page * pagePtr;            // pointer to head of its page list
     page * pageLastReferenced; // pointer to the page that the process has last referenced
@@ -151,6 +156,8 @@ process * generateProcesses() {
      rootPtr->arrivalTime = sortedArrivalTimes[0];
      rootPtr->serviceTime = ((rand() % 5) + 1) * 10;
      rootPtr->firstRunTime = -1;
+     rootPtr->hitCount = 0;
+     rootPtr->missCount = 0;
      rootPtr->numberOfPages = randomNumberOfPages();
      rootPtr->pagePtr = generateProcessPageList(rootPtr);
      rootPtr->pageLastReferenced = NULL;
@@ -163,8 +170,10 @@ process * generateProcesses() {
           nodePtr = nodePtr->nextPtr;
           nodePtr->pid = i;
           nodePtr->arrivalTime = sortedArrivalTimes[i];
-          nodePtr->serviceTime = ((rand() % 5) + 1) * 10;       // TODO: MULTIPLIED BY 10 DUE TO SECOND CONVERSION
+          nodePtr->serviceTime = ((rand() % 5) + 1) * 10;
           nodePtr->firstRunTime = -1;
+          nodePtr->hitCount = 0;
+          nodePtr->missCount = 0;
           nodePtr->numberOfPages = randomNumberOfPages();
           nodePtr->pagePtr = generateProcessPageList(nodePtr);
           nodePtr->pageLastReferenced = NULL;
@@ -209,11 +218,20 @@ memory * firstFreePage(memory * memPtr) {
      return memPtr;
 }
 
+memory * findPageInMemory(page * pagePtr, memory * memPtr) {
+     while (memPtr) {
+          if (memPtr->pagePtr && memPtr->pagePtr == pagePtr) {
+               return memPtr;
+          }
+          memPtr = memPtr->nextPtr;
+     }
+     return memPtr;
+}
+
 // brings in a page from the disk to the memory to the first free page in memory
 // returns 0 if page was already in memory, 1 otherwise
 int pageIn(page * pagePtr, memory * memPtr, int time) {
      if (pagePtr->inMemory) {
-          printf("Error Time %d.%d) Process %3d, virtual page %2d, physical page %2d already in memory\n", (time*100)/1000, (time*100)%1000, pagePtr->pid, pagePtr->pageID, memPtr->memID); 
           return 0;
      }
 
@@ -224,7 +242,6 @@ int pageIn(page * pagePtr, memory * memPtr, int time) {
           pagePtr->inMemory = 1;
           pagePtr->timePagedIn = time;
           pagePtr->physPageID = memPtr->memID; //set the physical page ID
-          printf("Time %d.%d Process %3d, paged in virtual page %2d, in memory physical page %2d\n", (time*100)/1000, (time*100)%1000, pagePtr->pid, pagePtr->pageID, memPtr->memID); 
      }
      return 1;
 }
@@ -232,7 +249,6 @@ int pageIn(page * pagePtr, memory * memPtr, int time) {
 // removes a page from memory
 // returns 1 if page found and removed, 0 otherwise
 int pageOut(page * pagePtr, memory * memPtr, int time) {
-//     printf("Time %d request to page out process %3d, page %2d\n", time, pagePtr->pid, pagePtr->pageID); 
      while(memPtr) {
           if(memPtr->busy && memPtr->pagePtr == pagePtr) {
                // page found in memory
@@ -241,7 +257,6 @@ int pageOut(page * pagePtr, memory * memPtr, int time) {
                memPtr->pagePtr->timeLastReferenced = 0;
                memPtr->pagePtr->referenceCount = 0;
                memPtr->pagePtr->physPageID = -1; //reset the physical page ID
-               printf("Time %d.%d Process %3d, paged out virtual page %2d, evicting physical page %2d\n", (time*100)/1000, (time*100)%1000, pagePtr->pid, pagePtr->pageID, memPtr->memID); 
                return 1;
           }
           memPtr = memPtr->nextPtr;
@@ -298,9 +313,6 @@ page * generateReference(process * procPtr, int time) {
      int i;
      for (i = 0; i < newReferencePageID; ++i)
           pageToReference = pageToReference->nextPtr;
-
-     printf("Time %d.%d Process %3d last %2d wants %2d\t", (time*100)/1000, (time*100)%1000,
-          pageToReference->pid, previouslyReferencedPage(procPtr)->pageID, pageToReference->pageID);
 
      return pageToReference;
 }
@@ -425,21 +437,46 @@ int processCompleted(process * procPtr, int time) {
      return (time >= (procPtr->firstRunTime + procPtr->serviceTime));
 }
 
+void printMemoryMap(memory * memPtr) {
+     printf("Memory map\n");
+     int counter = 0;
+     int entriesPerLine = 20;
+     while (memPtr) {
+          if (memPtr->busy) {
+               printf("%03d ", memPtr->pagePtr->pid);
+          }
+          else {
+               printf("... ");
+          }          
+          memPtr = memPtr->nextPtr;
+
+          if (counter == entriesPerLine - 1)
+               printf("\n");
+          counter = ((counter + 1) % entriesPerLine);
+     }
+
+     printf("\n");
+}
+
 // initiates process by referencing their page 0 
 void startProcess(process * procPtr, memory * memPtr, int time) {
+     printf("\nSWAPPING time: %d.%03d, proc: %3d, Enter, size: %2d, service: %d seconds\n", 
+          (time*100)/1000, (time*100)%1000, procPtr->pid, procPtr->numberOfPages, procPtr->serviceTime/10);
+     printMemoryMap(memPtr);
      procPtr->firstRunTime = time;
-     printf("Process %3d starting at time %3d.%d, arrived at %f with end time %3d.%d\n", 
-          procPtr->pid, (procPtr->firstRunTime)*100/1000, ((procPtr->firstRunTime)*100)%1000, (procPtr->arrivalTime)/10, (procPtr->firstRunTime + procPtr->serviceTime)*100/1000, ((procPtr->firstRunTime + procPtr->serviceTime)*100)%1000);
      pageIn(procPtr->pagePtr, memPtr, time);
      referencePage(procPtr, procPtr->pagePtr, memPtr, time);
-     printf("Time %d.%d Process %3d MISS on first reference\n", (time*100)/1000, (time*100)%1000, procPtr->pid);
-
+     procPtr->missCount += 1;
+     if (DEBUG_print_references) {
+          printf("REF MISS time: %d.%03d, proc: %3d, ref page: %2d, frame: %2d\n",
+               (time*100)/1000, (time*100)%1000, procPtr->pid, procPtr->pagePtr->pageID, procPtr->pagePtr->physPageID);
+     }
 }
 
 // stops process and removes its pages from memory, returns the number of pages removed
 int stopProcess(process * procPtr, memory * memPtr, int time) { 
      int count = 0;
-
+     memory * memHead = memPtr;
      while(memPtr) {
           if(memPtr->pagePtr && (memPtr->pagePtr->pid == procPtr->pid)) {
                memPtr->busy = 0;
@@ -449,8 +486,9 @@ int stopProcess(process * procPtr, memory * memPtr, int time) {
           memPtr = memPtr->nextPtr;
      }
 
-     if(count)
-          printf("Process %d stopped at time %d.%d, removed %d pages from memory\n", procPtr->pid, (time*100)/1000, (time*100)%1000, count);
+     printf("\nSWAPPING time: %d.%03d, proc: %3d,  Exit, size: %2d, service: %d seconds\n", 
+          (time*100)/1000, (time*100)%1000, procPtr->pid, procPtr->numberOfPages, procPtr->serviceTime/10);
+     printMemoryMap(memHead);
 
      return count;
 }
@@ -458,8 +496,7 @@ int stopProcess(process * procPtr, memory * memPtr, int time) {
 // brings in jobs that have arrived into memory if there is room for them
 void bringInWaitingJobs(process * procPtr, memory * memPtr, int time) {
      while (procPtr) {
-          if ((procPtr->arrivalTime < (float)time) && (procPtr->firstRunTime == -1) && (numberOfFreePages(memPtr) >= 4)) {
-               printf("Process %d Arrival Time %f Service Time %d Number of pages: %d\n", procPtr->pid, (procPtr->arrivalTime)/10, (procPtr->serviceTime)/10, procPtr->numberOfPages);
+          if ((procPtr->arrivalTime < (float)time) && (procPtr->firstRunTime == -1) && (numberOfFreePages(memPtr) >= 4)){
                startProcess(procPtr, memPtr, time);
           }
           procPtr = procPtr->nextPtr;
@@ -476,36 +513,45 @@ void kickOutCompletedJobs(process * procPtr, memory * memPtr, int time) {
           procPtr = procPtr->nextPtr;
      }
 }
-
-void DEBUG_printUsedMem(memory * memPtr, int time) {
-     printf("\nAt end of time %d have %d pages in memory\n", time, 100 - numberOfFreePages(memPtr));
-     int counter = 0;
-     int entriesPerLine = 10;
-     while (memPtr) {
-          if (memPtr->busy) {
-               printf("[%03d, %02d]\t", memPtr->pagePtr->pid, memPtr->pagePtr->pageID);
-          }
-          else {
-               printf("[---, --]\t");
-          }          
-          memPtr = memPtr->nextPtr;
-
-          if (counter == entriesPerLine - 1)
-               printf("\n");
-          counter = ((counter + 1) % entriesPerLine);
-     }
-
-     printf("\n");
-}
           
+int numberOfJobsRun(process * procPtr) {
+     int counter = 0;
+     while(procPtr) {
+          if(procPtr->firstRunTime != -1) {
+               ++counter;
+          }
+          procPtr = procPtr->nextPtr;
+     }
+     return counter;
+}
+
+int totalNumberOfHits(process * procPtr) {
+     int counter = 0;
+     while(procPtr) {
+          counter += procPtr->hitCount;
+          procPtr = procPtr->nextPtr;
+     }
+     return counter;
+}
+
+int totalNumberOfMisses(process * procPtr) {
+     int counter = 0;
+     while(procPtr) {
+          counter += procPtr->missCount;
+          procPtr = procPtr->nextPtr;
+     }
+     return counter;
+}
+
 int main() {
      //srand(time(NULL));
+     DEBUG_print_references = 1;
      srand(1337);
      memory * memHead = downloadRAM();
      process * procHead = generateProcesses();
 
      int time;
-     policy desiredPolicy = RANDOM;
+     policy desiredPolicy = MFU;
 
      for (time = 0; time < 600; ++time) {
           process * procPtr = procHead;
@@ -521,27 +567,50 @@ int main() {
                     //if desired page is not in memory
                     if (desiredPage->inMemory == 0) {
                          if (numberOfFreePages(memHead) <= 0) {
-                              printf("MISS, needs replacement\n");
+                              // MISS needs replacement
+                              procPtr->missCount += 1;
                               page * pageToRemove = pageReplace(procPtr, memHead, time, desiredPolicy);
                               pageOut(pageToRemove, memHead, time);
                               pageIn(desiredPage, memHead, time);
+                              if (DEBUG_print_references) {
+                                   printf("REF MISS time: %d.%03d, proc: %3d, ref page: %2d, frame: %2d, page out: %2d\n",
+                                        (time*100)/1000, (time*100)%1000, procPtr->pid, desiredPage->pageID, 
+                                        desiredPage->physPageID, pageToRemove->pageID);
+                              }
                          }
                          else {
-                              printf("MISS, free space\n");
+                              // MISS with free pages
+                              procPtr->missCount += 1;
                               pageIn(desiredPage, memHead, time);
+                              if (DEBUG_print_references) {
+                                   printf("REF MISS time: %d.%03d, proc: %3d, ref page: %2d, frame: %2d\n",
+                                        (time*100)/1000, (time*100)%1000, procPtr->pid, desiredPage->pageID, 
+                                        desiredPage->physPageID);
+                              }
                          }
                     }
                     else {
-                         printf("HIT\n");
-                         printf("Time %d.%d Process %d Virtual Page %d Physical Page %d\n", (time*100)/1000, (time*100)%1000, procPtr->pid, desiredPage->pageID, desiredPage->physPageID);
+                         // HIT
+                         procPtr->hitCount += 1;
+                         if (DEBUG_print_references) {
+                              printf("REF HIT  time: %d.%03d, proc: %3d, ref page: %2d, frame: %2d\n",
+                                   (time*100)/1000, (time*100)%1000, procPtr->pid, desiredPage->pageID, 
+                                   desiredPage->physPageID);     
+                         }
                     }
                     //actually reference the page
                     referencePage(procPtr, desiredPage, memHead, time);
                }
                procPtr = procPtr->nextPtr;
-          }
-          //DEBUG_printUsedMem(memHead, time);
+          } 
      }
+
+     DEBUG_trial_statistics[0][0] = numberOfJobsRun(procHead);
+     DEBUG_trial_statistics[0][1] = totalNumberOfHits(procHead);
+     DEBUG_trial_statistics[0][2] = totalNumberOfMisses(procHead);
+
+     printf("\nTrial 0 stastics: number of jobs run = %d, hit/miss ratio = %f  \n", 
+          DEBUG_trial_statistics[0][0], (((float)DEBUG_trial_statistics[0][1]) / ((float)DEBUG_trial_statistics[0][2])));
 
      return 0;
 }
