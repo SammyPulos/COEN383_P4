@@ -3,7 +3,7 @@
 #include <time.h>
 #define NUM_JOBS 500
 
-int DEBUG_print_references;   // enables or disables refrence notifications
+int DEBUG_print_references;   // enables or disables reference notifications
 int DEBUG_print_swaps;        // enables or disables swap notifications
 int trial_statistics[25][3];  // [Trial num][jobs, hits, misses]
 
