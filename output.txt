@@ -1421,42 +1421,42 @@ REF HIT  time: 1.300, proc:   6, ref page:  1, frame: 22
 
 ================================================================================
 
-STASTICS FOR POLICY FIFO
-Trial 0 stastics: number of jobs run = 499, hit/miss ratio = 0.960382 
-Trial 1 stastics: number of jobs run = 499, hit/miss ratio = 0.939596 
-Trial 2 stastics: number of jobs run = 498, hit/miss ratio = 0.924663 
-Trial 3 stastics: number of jobs run = 492, hit/miss ratio = 0.965610 
-Trial 4 stastics: number of jobs run = 496, hit/miss ratio = 0.860459 
+STATISTICS FOR POLICY FIFO
+Trial 0 statistics: number of jobs run = 499, hit/miss ratio = 0.960382 
+Trial 1 statistics: number of jobs run = 499, hit/miss ratio = 0.939596 
+Trial 2 statistics: number of jobs run = 498, hit/miss ratio = 0.924663 
+Trial 3 statistics: number of jobs run = 492, hit/miss ratio = 0.965610 
+Trial 4 statistics: number of jobs run = 496, hit/miss ratio = 0.860459 
 Average of all trials: number of jobs run = 496.80, hit/miss ratio = 0.929338 
 
-STASTICS FOR POLICY LRU
-Trial 0 stastics: number of jobs run = 499, hit/miss ratio = 1.005028 
-Trial 1 stastics: number of jobs run = 499, hit/miss ratio = 0.955874 
-Trial 2 stastics: number of jobs run = 498, hit/miss ratio = 0.929062 
-Trial 3 stastics: number of jobs run = 498, hit/miss ratio = 0.947592 
-Trial 4 stastics: number of jobs run = 498, hit/miss ratio = 0.880078 
+STATISTICS FOR POLICY LRU
+Trial 0 statistics: number of jobs run = 499, hit/miss ratio = 1.005028 
+Trial 1 statistics: number of jobs run = 499, hit/miss ratio = 0.955874 
+Trial 2 statistics: number of jobs run = 498, hit/miss ratio = 0.929062 
+Trial 3 statistics: number of jobs run = 498, hit/miss ratio = 0.947592 
+Trial 4 statistics: number of jobs run = 498, hit/miss ratio = 0.880078 
 Average of all trials: number of jobs run = 498.40, hit/miss ratio = 0.942395 
 
-STASTICS FOR POLICY LFU
-Trial 0 stastics: number of jobs run = 499, hit/miss ratio = 0.946048 
-Trial 1 stastics: number of jobs run = 499, hit/miss ratio = 0.877832 
-Trial 2 stastics: number of jobs run = 498, hit/miss ratio = 0.871084 
-Trial 3 stastics: number of jobs run = 498, hit/miss ratio = 0.909897 
-Trial 4 stastics: number of jobs run = 494, hit/miss ratio = 0.844982 
+STATISTICS FOR POLICY LFU
+Trial 0 statistics: number of jobs run = 499, hit/miss ratio = 0.946048 
+Trial 1 statistics: number of jobs run = 499, hit/miss ratio = 0.877832 
+Trial 2 statistics: number of jobs run = 498, hit/miss ratio = 0.871084 
+Trial 3 statistics: number of jobs run = 498, hit/miss ratio = 0.909897 
+Trial 4 statistics: number of jobs run = 494, hit/miss ratio = 0.844982 
 Average of all trials: number of jobs run = 497.60, hit/miss ratio = 0.889117 
 
-STASTICS FOR POLICY MFU
-Trial 0 stastics: number of jobs run = 499, hit/miss ratio = 0.910959 
-Trial 1 stastics: number of jobs run = 499, hit/miss ratio = 0.878917 
-Trial 2 stastics: number of jobs run = 497, hit/miss ratio = 0.896869 
-Trial 3 stastics: number of jobs run = 498, hit/miss ratio = 0.891759 
-Trial 4 stastics: number of jobs run = 496, hit/miss ratio = 0.843363 
+STATISTICS FOR POLICY MFU
+Trial 0 statistics: number of jobs run = 499, hit/miss ratio = 0.910959 
+Trial 1 statistics: number of jobs run = 499, hit/miss ratio = 0.878917 
+Trial 2 statistics: number of jobs run = 497, hit/miss ratio = 0.896869 
+Trial 3 statistics: number of jobs run = 498, hit/miss ratio = 0.891759 
+Trial 4 statistics: number of jobs run = 496, hit/miss ratio = 0.843363 
 Average of all trials: number of jobs run = 497.80, hit/miss ratio = 0.883851 
 
-STASTICS FOR POLICY RANDOM
-Trial 0 stastics: number of jobs run = 499, hit/miss ratio = 1.001577 
-Trial 1 stastics: number of jobs run = 499, hit/miss ratio = 0.920917 
-Trial 2 stastics: number of jobs run = 498, hit/miss ratio = 0.938468 
-Trial 3 stastics: number of jobs run = 494, hit/miss ratio = 0.923896 
-Trial 4 stastics: number of jobs run = 494, hit/miss ratio = 0.863290 
+STATISTICS FOR POLICY RANDOM
+Trial 0 statistics: number of jobs run = 499, hit/miss ratio = 1.001577 
+Trial 1 statistics: number of jobs run = 499, hit/miss ratio = 0.920917 
+Trial 2 statistics: number of jobs run = 498, hit/miss ratio = 0.938468 
+Trial 3 statistics: number of jobs run = 494, hit/miss ratio = 0.923896 
+Trial 4 statistics: number of jobs run = 494, hit/miss ratio = 0.863290 
 Average of all trials: number of jobs run = 496.80, hit/miss ratio = 0.928083 

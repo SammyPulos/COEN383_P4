@@ -136,13 +136,13 @@ void resetMetadata(memory * memPtr, process * procPtr) {
                pagePtr->timePagedIn = -1;
                pagePtr->timeLastReferenced = -1;
                pagePtr->referenceCount = 0;
-               pagePtr->physPageID = -1; // TODO: is -1 the proper inital value?
+               pagePtr->physPageID = -1; 
                pagePtr = pagePtr->nextPtr;
           }
           procPtr->firstRunTime = -1;
           procPtr->hitCount = 0;
           procPtr->missCount = 0;
-          procPtr->pageLastReferenced = NULL; // TODO: is NULL the proper initial value?
+          procPtr->pageLastReferenced = NULL; 
           procPtr = procPtr->nextPtr;
      }
 }
@@ -706,13 +706,13 @@ int main() {
      int totalHits = 0;
      int totalMisses = 0;
      for(polNum = 0; polNum < 5; ++polNum) {
-          printf("\nSTASTICS FOR POLICY %s\n", policyNames[polNum]);
+          printf("\nSTATISTICS FOR POLICY %s\n", policyNames[polNum]);
           totalJobs = 0;
           totalHits = 0;
           totalMisses = 0;
           for(trialNum = 0; trialNum < 5; ++trialNum) {
                int i = trialNum * 5 + polNum;
-               printf("Trial %d stastics: number of jobs run = %3.2d, hit/miss ratio = %f \n", 
+               printf("Trial %d statistics: number of jobs run = %3.2d, hit/miss ratio = %f \n", 
                     trialNum, trial_statistics[i][0], 
                     (((float)trial_statistics[i][1])/((float)trial_statistics[i][2])));
                totalJobs += trial_statistics[i][0];
